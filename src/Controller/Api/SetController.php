@@ -27,7 +27,7 @@ class SetController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_sets_get', methods: ['GET'])]
-    public function getCard(string $locale, string $id): JsonResponse
+    public function get(string $locale, string $id): JsonResponse
     {
         $response = $this->client->request('GET', "{$_ENV['TCG_BASE_API_URL']}/{$locale}/sets/{$id}");
         $data = $response->toArray();
