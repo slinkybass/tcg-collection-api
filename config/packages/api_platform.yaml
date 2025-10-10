@@ -1,7 +1,15 @@
 api_platform:
-    title: Hello API Platform
+    title: TCG Collection API
     version: 1.0.0
     defaults:
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
+        pagination_items_per_page: 100
+        pagination_client_items_per_page: true
+    collection:
+        pagination:
+            items_per_page_parameter_name: limit
+    formats:
+        json: ['application/json']
+        jsonld: ['application/ld+json']

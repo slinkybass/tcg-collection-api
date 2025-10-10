@@ -5,74 +5,84 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\CardRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CardRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: ['groups' => ['card:read']],
+    denormalizationContext: ['groups' => ['card:write']]
+)]
 class Card
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $idAPI = null;
+    #[ORM\Column(length: 255, unique: true)]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
+    private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?string $name = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?string $setPos = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?string $imageLow = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['card:read', 'card:write'])]
     private ?string $imageHigh = null;
 
     #[ORM\Column(enumType: Enum\CardCategory::class, nullable: true)]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?Enum\CardCategory $category = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['card:read', 'card:write'])]
     private ?string $illustrator = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?string $rarity = null;
 
     #[ORM\Column]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?bool $variantNormal = null;
 
     #[ORM\Column]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?bool $variantReverse = null;
 
     #[ORM\Column]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?bool $variantHolo = null;
 
     #[ORM\Column]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?bool $variantFirstEdition = null;
 
     #[ORM\Column]
+    #[Groups(['card:read', 'card:write', 'set:read'])]
     private ?bool $variantPromo = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['card:read', 'card:write'])]
     private ?\DateTime $updated = null;
 
     #[ORM\ManyToOne(inversedBy: 'cards')]
+    #[Groups(['card:read', 'card:write'])]
     private ?Set $cardSet = null;
 
-    public function getId(): ?int
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function getIdAPI(): ?string
+    public function setId(string $id): static
     {
-        return $this->idAPI;
-    }
-
-    public function setIdAPI(string $idAPI): static
-    {
-        $this->idAPI = $idAPI;
+        $this->id = $id;
 
         return $this;
     }

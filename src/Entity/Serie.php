@@ -8,30 +8,35 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SerieRepository::class)]
 #[ORM\Table(name: "cardSerie")]
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: ['groups' => ['serie:read']],
+    denormalizationContext: ['groups' => ['serie:write']]
+)]
 class Serie
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $idAPI = null;
+    #[ORM\Column(length: 255, unique: true)]
+    #[Groups(['serie:read', 'serie:write', 'set:read'])]
+    private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['serie:read', 'serie:write', 'set:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['serie:read', 'serie:write'])]
     private ?string $logo = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Groups(['serie:read', 'serie:write'])]
     private ?\DateTime $releaseDate = null;
 
     #[ORM\OneToMany(targetEntity: Set::class, mappedBy: 'serie')]
+    #[Groups(['serie:read'])]
     private Collection $cardSets;
 
     public function __construct()
@@ -39,19 +44,14 @@ class Serie
         $this->cardSets = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function getIdAPI(): ?string
+    public function setId(string $id): static
     {
-        return $this->idAPI;
-    }
-
-    public function setIdAPI(string $idAPI): static
-    {
-        $this->idAPI = $idAPI;
+        $this->id = $id;
 
         return $this;
     }

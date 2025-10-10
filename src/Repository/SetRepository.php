@@ -15,14 +15,4 @@ class SetRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Set::class);
     }
-
-    public function findIdAPI($idAPI): ?Set
-    {
-        return $this->createQueryBuilder('s')
-            ->andWhere('s.idAPI = :idAPI')
-            ->setParameter('idAPI', $idAPI)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
 }

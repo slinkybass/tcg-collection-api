@@ -15,14 +15,4 @@ class CardRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Card::class);
     }
-
-    public function findIdAPI($idAPI): ?Card
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.idAPI = :idAPI')
-            ->setParameter('idAPI', $idAPI)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
 }

@@ -42,15 +42,15 @@ class ImportController extends AbstractController
             }
             $serieData = $response->toArray();
 
-            $idAPI = $serieData['id'];
+            $id = str_replace('.', '_', $serieData['id']);
             $name = array_key_exists('name', $serieData) ? $serieData['name'] : null;
             $logo = array_key_exists('logo', $serieData) ? $serieData['logo'] . '.png' : null;
             $releaseDate = array_key_exists('releaseDate', $serieData) ? new \DateTime($serieData['releaseDate']) : null;
 
-            $serie = $this->em->getRepository(Serie::class)->findIdAPI($idAPI);
+            $serie = $this->em->getRepository(Serie::class)->find($id);
             if (!$serie) {
                 $serie = new Serie();
-                $serie->setIdAPI($idAPI);
+                $serie->setId($id);
             }
             $serie->setName($name);
             $serie->setLogo($logo);
@@ -82,17 +82,17 @@ class ImportController extends AbstractController
             }
             $setData = $response->toArray();
 
-            $idAPI = $setData['id'];
-            $serieIdAPI = array_key_exists('serie', $setData) ? (array_key_exists('id', $setData['serie']) ? $setData['serie']['id'] : null) : null;
-            $serie = $serieIdAPI ? $this->em->getRepository(Serie::class)->findIdAPI($serieIdAPI) : null;
+            $id = str_replace('.', '_', $setData['id']);
+            $serieId = array_key_exists('serie', $setData) ? (array_key_exists('id', $setData['serie']) ? str_replace('.', '_', $setData['serie']['id']) : null) : null;
+            $serie = $serieId ? $this->em->getRepository(Serie::class)->find($serieId) : null;
             $name = array_key_exists('name', $setData) ? $setData['name'] : null;
             $logo = array_key_exists('logo', $setData) ? $setData['logo'] . '.png' : null;
             $releaseDate = array_key_exists('releaseDate', $setData) ? new \DateTime($setData['releaseDate']) : null;
 
-            $set = $this->em->getRepository(Set::class)->findIdAPI($idAPI);
+            $set = $this->em->getRepository(Set::class)->find($id);
             if (!$set) {
                 $set = new Set();
-                $set->setIdAPI($idAPI);
+                $set->setId($id);
             }
             $set->setSerie($serie);
             $set->setName($name);
@@ -111,12 +111,13 @@ class ImportController extends AbstractController
     #[Route('/cards', name: 'api_import_cards', methods: ['GET'])]
     public function cards(Request $request, string $locale): JsonResponse
     {
-        $setQuery = $request->query->get('set');
-        $sets = $setQuery ? [ $this->em->getRepository(Set::class)->findIdAPI($setQuery) ] : $this->em->getRepository(Set::class)->findAll();
+        $setId = $request->query->get('set');
+        $sets = $setId ? [ $this->em->getRepository(Set::class)->find($setId) ] : $this->em->getRepository(Set::class)->findAll();
 
         $data = array();
         foreach ($sets as $set) {
-            $response = $this->client->request('GET', "{$_ENV['TCG_BASE_API_URL']}/{$locale}/sets/{$set->getIdAPI()}");
+            $setId = str_replace('_', '.', $set->getId());
+            $response = $this->client->request('GET', "{$_ENV['TCG_BASE_API_URL']}/{$locale}/sets/{$setId}");
             if ($response->getStatusCode() !== 200) {
                 continue;
             }
@@ -130,7 +131,7 @@ class ImportController extends AbstractController
                 }
                 $cardData = $response->toArray();
 
-                $idAPI = $cardData['id'];
+                $id = str_replace('.', '_', $cardData['id']);
                 $name = array_key_exists('name', $cardData) ? $cardData['name'] : null;
                 $localId = array_key_exists('localId', $cardData) ? $cardData['localId'] : null;
                 $imageLow = array_key_exists('image', $cardData) ? $cardData['image'] . '/low.png' : null;
@@ -146,10 +147,10 @@ class ImportController extends AbstractController
                 $variantPromo = array_key_exists('wPromo', $variants) ? $variants['wPromo'] : false;
                 $updated = array_key_exists('updated', $cardData) ? new \DateTime($cardData['updated']) : null;
 
-                $card = $this->em->getRepository(Card::class)->findIdAPI($idAPI);
+                $card = $this->em->getRepository(Card::class)->find($id);
                 if (!$card) {
                     $card = new Card();
-                    $card->setIdAPI($idAPI);
+                    $card->setId($id);
                 }
                 $card->setCardSet($set);
                 $card->setName($name);

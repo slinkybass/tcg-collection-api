@@ -15,14 +15,4 @@ class SerieRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Serie::class);
     }
-
-    public function findIdAPI($idAPI): ?Serie
-    {
-        return $this->createQueryBuilder('s')
-            ->andWhere('s.idAPI = :idAPI')
-            ->setParameter('idAPI', $idAPI)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
 }

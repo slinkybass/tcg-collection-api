@@ -7,9 +7,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 enum CardCategory: string implements TranslatableInterface
 {
-    case pokemon = 'Pokemon';
-    case energy = 'Energy';
-    case trainer = 'Trainer';
+    case POKEMON = 'Pokemon';
+    case ENERGY = 'Energy';
+    case TRAINER = 'Trainer';
 
     public function trans(TranslatorInterface $translator, ?string $locale = null): string
     {

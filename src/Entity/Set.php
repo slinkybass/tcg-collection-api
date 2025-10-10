@@ -3,38 +3,60 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Controller\Api\SetOpenAction;
 use App\Repository\SetRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SetRepository::class)]
 #[ORM\Table(name: "cardSet")]
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: ['groups' => ['set:read']],
+    denormalizationContext: ['groups' => ['set:write']],
+    operations: [
+        new \ApiPlatform\Metadata\Get(),
+        new \ApiPlatform\Metadata\GetCollection(),
+        new \ApiPlatform\Metadata\Post(),
+        new \ApiPlatform\Metadata\Patch(),
+        new \ApiPlatform\Metadata\Delete(),
+        new \ApiPlatform\Metadata\Get(
+            name: 'set_open',
+            uriTemplate: '/sets/{id}/open',
+            controller: SetOpenAction::class,
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Opens a set and returns a list of obtained cards'),
+            read: true,
+            write: false,
+        ),
+    ]
+)]
 class Set
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $idAPI = null;
+    #[ORM\Column(length: 255, unique: true)]
+    #[Groups(['set:read', 'set:write', 'serie:read', 'card:read'])]
+    private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['set:read', 'set:write', 'serie:read', 'card:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['set:read', 'set:write'])]
     private ?string $logo = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Groups(['set:read', 'set:write'])]
     private ?\DateTime $releaseDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'cardSets')]
+    #[Groups(['set:read', 'set:write'])]
     private ?Serie $serie = null;
 
     #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'cardSet')]
+    #[Groups(['set:read'])]
     private Collection $cards;
 
     public function __construct()
@@ -42,19 +64,14 @@ class Set
         $this->cards = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function getIdAPI(): ?string
+    public function setId(string $id): static
     {
-        return $this->idAPI;
-    }
-
-    public function setIdAPI(string $idAPI): static
-    {
-        $this->idAPI = $idAPI;
+        $this->id = $id;
 
         return $this;
     }
