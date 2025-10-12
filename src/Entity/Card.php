@@ -9,6 +9,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CardRepository::class)]
 #[ApiResource(
+    shortName: 'Card',
     normalizationContext: ['groups' => ['card:read']],
     denormalizationContext: ['groups' => ['card:write']]
 )]

@@ -14,6 +14,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: CardSetRepository::class)]
 #[ORM\Table(name: "cardSet")]
 #[ApiResource(
+    shortName: 'Set',
     normalizationContext: ['groups' => ['cardset:read']],
     denormalizationContext: ['groups' => ['cardset:write']],
     operations: [
@@ -23,8 +24,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new \ApiPlatform\Metadata\Patch(),
         new \ApiPlatform\Metadata\Delete(),
         new \ApiPlatform\Metadata\Get(
-            name: 'cardset_open',
-            uriTemplate: '/cardsets/{id}/open',
+            name: 'cardSet_open',
+            uriTemplate: '/sets/{id}/open',
             controller: CardSetOpenAction::class,
             openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Opens a CardSet and returns a list of obtained Cards.'),
             read: true,

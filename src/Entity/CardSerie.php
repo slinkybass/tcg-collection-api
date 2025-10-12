@@ -3,16 +3,17 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
-use App\Repository\SerieRepository;
+use App\Repository\CardSerieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity(repositoryClass: SerieRepository::class)]
+#[ORM\Entity(repositoryClass: CardSerieRepository::class)]
 #[ORM\Table(name: "cardSerie")]
 #[ApiResource(
+    shortName: 'Serie',
     normalizationContext: ['groups' => ['cardSerie:read']],
     denormalizationContext: ['groups' => ['cardSerie:write']]
 )]
