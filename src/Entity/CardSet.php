@@ -15,8 +15,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Table(name: "cardSet")]
 #[ApiResource(
     shortName: 'Set',
-    normalizationContext: ['groups' => ['cardset:read']],
-    denormalizationContext: ['groups' => ['cardset:write']],
+    normalizationContext: ['groups' => ['cardSet:read']],
+    denormalizationContext: ['groups' => ['cardSet:write']],
     operations: [
         new \ApiPlatform\Metadata\Get(),
         new \ApiPlatform\Metadata\GetCollection(),
