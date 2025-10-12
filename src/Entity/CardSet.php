@@ -48,7 +48,7 @@ class CardSet
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['cardSet:read', 'cardSet:write'])]
+    #[Groups(['cardSet:read', 'cardSet:write', 'cardSerie:read', 'card:read'])]
     private ?string $logo = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
