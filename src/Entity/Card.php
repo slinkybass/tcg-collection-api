@@ -16,19 +16,19 @@ class Card
 {
     #[ORM\Id]
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?string $name = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?string $setPos = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?string $imageLow = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -36,7 +36,7 @@ class Card
     private ?string $imageHigh = null;
 
     #[ORM\Column(enumType: Enum\CardCategory::class, nullable: true)]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?Enum\CardCategory $category = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -44,27 +44,27 @@ class Card
     private ?string $illustrator = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?string $rarity = null;
 
     #[ORM\Column]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?bool $variantNormal = null;
 
     #[ORM\Column]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?bool $variantReverse = null;
 
     #[ORM\Column]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?bool $variantHolo = null;
 
     #[ORM\Column]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?bool $variantFirstEdition = null;
 
     #[ORM\Column]
-    #[Groups(['card:read', 'card:write', 'set:read'])]
+    #[Groups(['card:read', 'card:write', 'cardSet:read'])]
     private ?bool $variantPromo = null;
 
     #[ORM\Column(nullable: true)]
@@ -72,8 +72,9 @@ class Card
     private ?\DateTime $updated = null;
 
     #[ORM\ManyToOne(inversedBy: 'cards')]
+    #[ORM\JoinColumn(name: 'cardSet_id', referencedColumnName: 'id')]
     #[Groups(['card:read', 'card:write'])]
-    private ?Set $cardSet = null;
+    private ?CardSet $cardSet = null;
 
     public function getId(): ?string
     {
@@ -243,12 +244,12 @@ class Card
         return $this;
     }
 
-    public function getCardSet(): ?Set
+    public function getCardSet(): ?CardSet
     {
         return $this->cardSet;
     }
 
-    public function setCardSet(?Set $cardSet): static
+    public function setCardSet(?CardSet $cardSet): static
     {
         $this->cardSet = $cardSet;
 

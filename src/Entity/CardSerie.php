@@ -13,30 +13,30 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: SerieRepository::class)]
 #[ORM\Table(name: "cardSerie")]
 #[ApiResource(
-    normalizationContext: ['groups' => ['serie:read']],
-    denormalizationContext: ['groups' => ['serie:write']]
+    normalizationContext: ['groups' => ['cardSerie:read']],
+    denormalizationContext: ['groups' => ['cardSerie:write']]
 )]
-class Serie
+class CardSerie
 {
     #[ORM\Id]
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['serie:read', 'serie:write', 'set:read'])]
+    #[Groups(['cardSerie:read', 'cardSerie:write', 'cardSet:read'])]
     private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['serie:read', 'serie:write', 'set:read'])]
+    #[Groups(['cardSerie:read', 'cardSerie:write', 'cardSet:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['serie:read', 'serie:write'])]
+    #[Groups(['cardSerie:read', 'cardSerie:write'])]
     private ?string $logo = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    #[Groups(['serie:read', 'serie:write'])]
+    #[Groups(['cardSerie:read', 'cardSerie:write'])]
     private ?\DateTime $releaseDate = null;
 
-    #[ORM\OneToMany(targetEntity: Set::class, mappedBy: 'serie')]
-    #[Groups(['serie:read'])]
+    #[ORM\OneToMany(targetEntity: CardSet::class, mappedBy: 'cardSerie')]
+    #[Groups(['cardSerie:read'])]
     private Collection $cardSets;
 
     public function __construct()
@@ -93,29 +93,29 @@ class Serie
     }
 
     /**
-     * @return Collection<int, Set>
+     * @return Collection<int, CardSet>
      */
     public function getCardSets(): Collection
     {
         return $this->cardSets;
     }
 
-    public function addCardSet(Set $cardSet): static
+    public function addCardSet(CardSet $cardSet): static
     {
         if (!$this->cardSets->contains($cardSet)) {
             $this->cardSets->add($cardSet);
-            $cardSet->setSerie($this);
+            $cardSet->setCardSerie($this);
         }
 
         return $this;
     }
 
-    public function removeCardSet(Set $cardSet): static
+    public function removeCardSet(CardSet $cardSet): static
     {
         if ($this->cardSets->removeElement($cardSet)) {
             // set the owning side to null (unless already changed)
-            if ($cardSet->getSerie() === $this) {
-                $cardSet->setSerie(null);
+            if ($cardSet->getCardSerie() === $this) {
+                $cardSet->setCardSerie(null);
             }
         }
 

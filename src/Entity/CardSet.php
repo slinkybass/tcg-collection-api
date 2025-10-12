@@ -3,19 +3,19 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
-use App\Controller\Api\SetOpenAction;
-use App\Repository\SetRepository;
+use App\Controller\Api\CardSetOpenAction;
+use App\Repository\CardSetRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity(repositoryClass: SetRepository::class)]
+#[ORM\Entity(repositoryClass: CardSetRepository::class)]
 #[ORM\Table(name: "cardSet")]
 #[ApiResource(
-    normalizationContext: ['groups' => ['set:read']],
-    denormalizationContext: ['groups' => ['set:write']],
+    normalizationContext: ['groups' => ['cardset:read']],
+    denormalizationContext: ['groups' => ['cardset:write']],
     operations: [
         new \ApiPlatform\Metadata\Get(),
         new \ApiPlatform\Metadata\GetCollection(),
@@ -23,40 +23,41 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new \ApiPlatform\Metadata\Patch(),
         new \ApiPlatform\Metadata\Delete(),
         new \ApiPlatform\Metadata\Get(
-            name: 'set_open',
-            uriTemplate: '/sets/{id}/open',
-            controller: SetOpenAction::class,
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Opens a set and returns a list of obtained cards'),
+            name: 'cardset_open',
+            uriTemplate: '/cardsets/{id}/open',
+            controller: CardSetOpenAction::class,
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Opens a CardSet and returns a list of obtained Cards.'),
             read: true,
             write: false,
         ),
     ]
 )]
-class Set
+class CardSet
 {
     #[ORM\Id]
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['set:read', 'set:write', 'serie:read', 'card:read'])]
+    #[Groups(['cardSet:read', 'cardSet:write', 'cardSerie:read', 'card:read'])]
     private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['set:read', 'set:write', 'serie:read', 'card:read'])]
+    #[Groups(['cardSet:read', 'cardSet:write', 'cardSerie:read', 'card:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['set:read', 'set:write'])]
+    #[Groups(['cardSet:read', 'cardSet:write'])]
     private ?string $logo = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    #[Groups(['set:read', 'set:write'])]
+    #[Groups(['cardSet:read', 'cardSet:write'])]
     private ?\DateTime $releaseDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'cardSets')]
-    #[Groups(['set:read', 'set:write'])]
-    private ?Serie $serie = null;
+    #[ORM\JoinColumn(name: 'cardSerie_id', referencedColumnName: 'id')]
+    #[Groups(['cardSet:read', 'cardSet:write'])]
+    private ?CardSerie $cardSerie = null;
 
     #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'cardSet')]
-    #[Groups(['set:read'])]
+    #[Groups(['cardSet:read'])]
     private Collection $cards;
 
     public function __construct()
@@ -112,14 +113,14 @@ class Set
         return $this;
     }
 
-    public function getSerie(): ?Serie
+    public function getCardSerie(): ?CardSerie
     {
-        return $this->serie;
+        return $this->cardSerie;
     }
 
-    public function setSerie(?Serie $serie): static
+    public function setCardSerie(?CardSerie $cardSerie): static
     {
-        $this->serie = $serie;
+        $this->cardSerie = $cardSerie;
 
         return $this;
     }

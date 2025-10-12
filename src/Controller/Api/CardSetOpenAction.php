@@ -4,13 +4,13 @@ namespace App\Controller\Api;
 
 use App\Entity\Card;
 use App\Entity\Enum\CardCategory;
-use App\Entity\Set;
+use App\Entity\CardSet;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class SetOpenAction extends AbstractController
+class CardSetOpenAction extends AbstractController
 {
     private EntityManagerInterface $em;
     private HttpClientInterface $client;
@@ -102,27 +102,27 @@ class SetOpenAction extends AbstractController
         $this->client = $client;
     }
 
-    public function __invoke(Set $set): JsonResponse
+    public function __invoke(CardSet $cardSet): JsonResponse
     {
         $cards = [];
         $godpack = mt_rand(1, $this->GODPACK_PROBABILITY) === 1;
 
         if ($godpack) {
-            $cards = $this->getRandomCardsGodpack($set);
+            $cards = $this->getRandomCardsGodpack($cardSet);
         } else {
-            $cardsCommon = $this->getRandomCardsCommon($set);
+            $cardsCommon = $this->getRandomCardsCommon($cardSet);
             $cards = array_merge($cards, $cardsCommon);
 
-            $cardsUncommon = $this->getRandomCardsUncommon($set);
+            $cardsUncommon = $this->getRandomCardsUncommon($cardSet);
             $cards = array_merge($cards, $cardsUncommon);
 
-            $cardsEnergy = $this->getRandomCardsEnergy($set);
+            $cardsEnergy = $this->getRandomCardsEnergy($cardSet);
             $cards = array_merge($cards, $cardsEnergy);
 
-            $cardsSpecial = $this->getRandomCardsSpecial($set);
+            $cardsSpecial = $this->getRandomCardsSpecial($cardSet);
             $cards = array_merge($cards, $cardsSpecial);
 
-            $cardsBonus = $this->getRandomCardsBonus($set);
+            $cardsBonus = $this->getRandomCardsBonus($cardSet);
             $cards = array_merge($cards, $cardsBonus);
         }
 
@@ -132,15 +132,15 @@ class SetOpenAction extends AbstractController
     // Obtiene aleatoriamente cartas del slot COMMON.
     // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes sin indicar rareza ni categoría.
     // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['COMMON'].
-    private function getRandomCardsCommon(Set $set, int|null $size = null) {
+    private function getRandomCardsCommon(CardSet $cardSet, int|null $size = null) {
         $slot = 'COMMON';
         $size = $size ?? $this->SLOT_SIZES[$slot];
-        $cards = $this->getRandomCards($set, $size, $slot);
+        $cards = $this->getRandomCards($cardSet, $size, $slot);
         $nCards = count($cards);
         if ($size === $nCards) {
             return $cards;
         } else {
-            $cardsExtra = $this->getRandomCards($set, $size-$nCards);
+            $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards);
             return array_merge($cards, $cardsExtra);
         }
     }
@@ -148,15 +148,15 @@ class SetOpenAction extends AbstractController
     // Obtiene aleatoriamente cartas del slot UNCOMMON.
     // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes de getRandomCardsCommon().
     // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['UNCOMMON'].
-    private function getRandomCardsUncommon(Set $set, int|null $size = null) {
+    private function getRandomCardsUncommon(CardSet $cardSet, int|null $size = null) {
         $slot = 'UNCOMMON';
         $size = $size ?? $this->SLOT_SIZES[$slot];
-        $cards = $this->getRandomCards($set, $size, $slot);
+        $cards = $this->getRandomCards($cardSet, $size, $slot);
         $nCards = count($cards);
         if ($size === $nCards) {
             return $cards;
         } else {
-            $cardsExtra = $this->getRandomCardsCommon($set, $size-$nCards);
+            $cardsExtra = $this->getRandomCardsCommon($cardSet, $size-$nCards);
             return array_merge($cards, $cardsExtra);
         }
     }
@@ -164,15 +164,15 @@ class SetOpenAction extends AbstractController
     // Obtiene aleatoriamente cartas de categoría Energy.
     // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes de getRandomCardsCommon().
     // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['ENERGY'].
-    private function getRandomCardsEnergy(Set $set, int|null $size = null) {
+    private function getRandomCardsEnergy(CardSet $cardSet, int|null $size = null) {
         $slot = 'ENERGY';
         $size = $size ?? $this->SLOT_SIZES[$slot];
-        $cards = $this->getRandomCards($set, $size, $slot);
+        $cards = $this->getRandomCards($cardSet, $size, $slot);
         $nCards = count($cards);
         if ($size === $nCards) {
             return $cards;
         } else {
-            $cardsExtra = $this->getRandomCardsCommon($set, $size-$nCards);
+            $cardsExtra = $this->getRandomCardsCommon($cardSet, $size-$nCards);
             return array_merge($cards, $cardsExtra);
         }
     }
@@ -180,11 +180,11 @@ class SetOpenAction extends AbstractController
     // Obtiene aleatoriamente cartas de una rareza aleatoria según SPECIAL_SLOT_WEIGHTS.
     // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes del resto de rarezas SPECIAL y si no del slot NORMAL (COMMON y UNCOMMON).
     // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['SPECIAL'].
-    private function getRandomCardsSpecial(Set $set, int|null $size = null) {
+    private function getRandomCardsSpecial(CardSet $cardSet, int|null $size = null) {
         $slot = 'SPECIAL';
         $size = $size ?? $this->SLOT_SIZES[$slot];
         $rarity = $this->getRandomRarity($this->SPECIAL_SLOT_WEIGHTS);
-        $cards = $this->getRandomCards($set, $size, $rarity);
+        $cards = $this->getRandomCards($cardSet, $size, $rarity);
         $nCards = count($cards);
         if ($size === $nCards) {
             return $cards;
@@ -193,7 +193,7 @@ class SetOpenAction extends AbstractController
             $index = array_search($rarity, $keys) - 1;
             while ($index >= 0) {
                 $rarityExtra = $keys[$index];
-                $cardsExtra = $this->getRandomCards($set, $size-$nCards, $rarityExtra);
+                $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards, $rarityExtra);
                 $cards = array_merge($cards, $cardsExtra);
                 $nCards = count($cards);
                 if ($size === $nCards) {
@@ -201,7 +201,7 @@ class SetOpenAction extends AbstractController
                 }
                 $index--;
             }
-            $cardsExtra = $this->getRandomCards($set, $size-$nCards, 'NORMAL');
+            $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards, 'NORMAL');
             return array_merge($cards, $cardsExtra);
         }
     }
@@ -209,11 +209,11 @@ class SetOpenAction extends AbstractController
     // Obtiene aleatoriamente cartas de una rareza aleatoria según BONUS_SLOT_WEIGHTS.
     // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes del resto de rarezas BONUS y si no del slot NORMAL (COMMON y UNCOMMON).
     // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['BONUS'].
-    private function getRandomCardsBonus(Set $set, int|null $size = null) {
+    private function getRandomCardsBonus(CardSet $cardSet, int|null $size = null) {
         $slot = 'BONUS';
         $size = $size ?? $this->SLOT_SIZES[$slot];
         $rarity = $this->getRandomRarity($this->BONUS_SLOT_WEIGHTS);
-        $cards = $this->getRandomCards($set, $size, $rarity);
+        $cards = $this->getRandomCards($cardSet, $size, $rarity);
         $nCards = count($cards);
         if ($size === $nCards) {
             return $cards;
@@ -222,7 +222,7 @@ class SetOpenAction extends AbstractController
             $index = array_search($rarity, $keys) - 1;
             while ($index >= 0) {
                 $rarityExtra = $keys[$index];
-                $cardsExtra = $this->getRandomCards($set, $size-$nCards, $rarityExtra);
+                $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards, $rarityExtra);
                 $cards = array_merge($cards, $cardsExtra);
                 $nCards = count($cards);
                 if ($size === $nCards) {
@@ -230,7 +230,7 @@ class SetOpenAction extends AbstractController
                 }
                 $index--;
             }
-            $cardsExtra = $this->getRandomCards($set, $size-$nCards, 'NORMAL');
+            $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards, 'NORMAL');
             return array_merge($cards, $cardsExtra);
         }
     }
@@ -238,20 +238,20 @@ class SetOpenAction extends AbstractController
     // Obtiene aleatoriamente cartas de las rarezas GODPACK (HOLO, ULTRA y SECRET).
     // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes del resto de rarezas GODPACK y si no del slot RARE o NORMAL (COMMON y UNCOMMON).
     // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en el total de $SLOT_SIZES.
-    private function getRandomCardsGodpack(Set $set, int|null $size = null) {
+    private function getRandomCardsGodpack(CardSet $cardSet, int|null $size = null) {
         $size = $size ?? array_sum($this->SLOT_SIZES);
-        $cards = $this->getRandomCards($set, $size, 'GODPACK');
+        $cards = $this->getRandomCards($cardSet, $size, 'GODPACK');
         $nCards = count($cards);
         if ($size === $nCards) {
             return $cards;
         } else {
-            $cardsExtra = $this->getRandomCards($set, $size-$nCards, 'RARE');
+            $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards, 'RARE');
             $cards = array_merge($cards, $cardsExtra);
             $nCards = count($cards);
             if ($size === $nCards) {
                 return $cards;
             } else {
-                $cardsExtra = $this->getRandomCards($set, $size-$nCards, 'NORMAL');
+                $cardsExtra = $this->getRandomCards($cardSet, $size-$nCards, 'NORMAL');
                 return array_merge($cards, $cardsExtra);
             }
         }
@@ -262,12 +262,12 @@ class SetOpenAction extends AbstractController
     // Si la rareza es NORMAL, se obtienen todas las cartas de la rareza COMMON y UNCOMMON.
     // Si la rareza es GODPACK, se obtienen todas las cartas de la rareza HOLO, ULTRA y SECRET.
     // Si no se indica rareza, se obtienen todas las cartas sin filtro.
-    private function getRandomCards(Set $set, int $size, string|null $rarity = null) {
+    private function getRandomCards(CardSet $cardSet, int $size, string|null $rarity = null) {
         $randomCards = [];
 
         $allCards = $this->em->getRepository(Card::class)->createQueryBuilder('c')
             ->where('c.cardSet = :cardSet')
-            ->setParameter('cardSet', $set);
+            ->setParameter('cardSet', $cardSet);
 
         if ($rarity === 'ENERGY') {
             $allCards->andWhere('c.category = :category')->setParameter('category', CardCategory::ENERGY);
