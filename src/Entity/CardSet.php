@@ -54,7 +54,7 @@ class CardSet
 
     #[ORM\ManyToOne(inversedBy: 'cardSets')]
     #[ORM\JoinColumn(name: 'cardSerie_id', referencedColumnName: 'id')]
-    #[Groups(['cardSet:read', 'cardSet:write'])]
+    #[Groups(['cardSet:read', 'cardSet:write', 'card:read'])]
     private ?CardSerie $cardSerie = null;
 
     #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'cardSet')]

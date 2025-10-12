@@ -21,11 +21,11 @@ class CardSerie
 {
     #[ORM\Id]
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['cardSerie:read', 'cardSerie:write', 'cardSet:read'])]
+    #[Groups(['cardSerie:read', 'cardSerie:write', 'cardSet:read', 'card:read'])]
     private ?string $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['cardSerie:read', 'cardSerie:write', 'cardSet:read'])]
+    #[Groups(['cardSerie:read', 'cardSerie:write', 'cardSet:read', 'card:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
