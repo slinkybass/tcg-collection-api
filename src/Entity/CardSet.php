@@ -9,7 +9,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Context;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 #[ORM\Entity(repositoryClass: CardSetRepository::class)]
 #[ORM\Table(name: "cardSet")]
@@ -50,11 +53,13 @@ class CardSet
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     #[Groups(['cardSet:read', 'cardSet:write'])]
+    #[Context([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d'])]
     private ?\DateTime $releaseDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'cardSets')]
     #[ORM\JoinColumn(name: 'cardSerie_id', referencedColumnName: 'id')]
     #[Groups(['cardSet:read', 'cardSet:write', 'card:read'])]
+    #[SerializedName('serie')]
     private ?CardSerie $cardSerie = null;
 
     #[ORM\OneToMany(targetEntity: Card::class, mappedBy: 'cardSet')]

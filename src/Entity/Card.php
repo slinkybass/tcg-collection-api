@@ -5,7 +5,10 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\CardRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Context;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 #[ORM\Entity(repositoryClass: CardRepository::class)]
 #[ApiResource(
@@ -70,11 +73,13 @@ class Card
 
     #[ORM\Column(nullable: true)]
     #[Groups(['card:read', 'card:write'])]
+    #[Context([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'])]
     private ?\DateTime $updated = null;
 
     #[ORM\ManyToOne(inversedBy: 'cards')]
     #[ORM\JoinColumn(name: 'cardSet_id', referencedColumnName: 'id')]
     #[Groups(['card:read', 'card:write'])]
+    #[SerializedName('set')]
     private ?CardSet $cardSet = null;
 
     public function getId(): ?string
