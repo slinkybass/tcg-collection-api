@@ -17,6 +17,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 #[ORM\Table(name: "cardSerie")]
 #[ApiResource(
     shortName: 'Serie',
+    order: ['releaseDate' => 'ASC'],
     normalizationContext: ['groups' => ['cardSerie:read']],
     denormalizationContext: ['groups' => ['cardSerie:write']]
 )]
@@ -41,6 +42,7 @@ class CardSerie
     private ?\DateTime $releaseDate = null;
 
     #[ORM\OneToMany(targetEntity: CardSet::class, mappedBy: 'cardSerie')]
+    #[ORM\OrderBy(['releaseDate' => 'ASC'])]
     #[Groups(['cardSerie:read'])]
     #[SerializedName('sets')]
     private Collection $cardSets;

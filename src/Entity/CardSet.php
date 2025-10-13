@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Controller\Api\CardSetOpenAction;
 use App\Repository\CardSetRepository;
+use App\Util\NaturalSort;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -18,6 +19,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 #[ORM\Table(name: "cardSet")]
 #[ApiResource(
     shortName: 'Set',
+    order: ['releaseDate' => 'ASC'],
     normalizationContext: ['groups' => ['cardSet:read']],
     denormalizationContext: ['groups' => ['cardSet:write']],
     operations: [
@@ -136,7 +138,12 @@ class CardSet
      */
     public function getCards(): Collection
     {
-        return $this->cards;
+        $cards = $this->cards->toArray();
+        usort($cards, function (Card $a, Card $b) {
+            $cmp = NaturalSort::compare($a->getSetPos(), $b->getSetPos());
+            return $cmp !== 0 ? $cmp : NaturalSort::compare($a->getId(), $b->getId());
+        });
+        return new ArrayCollection($cards);
     }
 
     public function addCard(Card $card): static
