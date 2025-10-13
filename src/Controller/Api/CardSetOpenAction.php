@@ -9,11 +9,28 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+/**
+ * Controlador que gestiona la apertura de sobres (CardSet) y devuelve las cartas generadas aleatoriamente.
+ *
+ * Genera la composición de cartas en función de las rarezas, categorías y pesos definidos.
+ * Puede devolver un sobre normal o un sobre especial (GODPACK) con rarezas altas garantizadas.
+ *
+ * @package App\Controller\Api
+ */
 class CardSetOpenAction extends AbstractController
 {
     private EntityManagerInterface $em;
 
-    // Rarezas categorizadas.
+    /**
+     * Mapa de rarezas clasificadas en grupos lógicos.
+     *
+     * Cada clave representa una categoría interna de rareza, y su valor es un array con las
+     * denominaciones exactas utilizadas en la base de datos.
+     *
+     * Estas agrupaciones permiten filtrar cartas por rareza durante la generación de sobres.
+     *
+     * @var array<string, string[]>
+     */
     private const RARITIES = [
         'COMMON' => [
             "Common",
@@ -66,7 +83,11 @@ class CardSetOpenAction extends AbstractController
         ],
     ];
 
-    // Cantidad de cartas por slot en un sobre.
+    /**
+     * Define la cantidad de cartas que contiene cada tipo de slot en un sobre.
+     *
+     * @var array<string, int>
+     */
     private const SLOT_SIZES = [
         'COMMON' => 4,
         'UNCOMMON' => 3,
@@ -75,7 +96,12 @@ class CardSetOpenAction extends AbstractController
         'BONUS' => 1,
     ];
 
-    // Porcentaje de rareza para el slot SPECIAL.
+    /**
+     * Distribución porcentual de probabilidad de obtener una rareza específica
+     * dentro del slot SPECIAL.
+     *
+     * @var array<string, int>
+     */
     private const SPECIAL_SLOT_WEIGHTS = [
         'RARE' => 60,
         'HOLO' => 30,
@@ -83,7 +109,12 @@ class CardSetOpenAction extends AbstractController
         'SECRET' => 1,
     ];
 
-    // Porcentaje de rareza para el slot BONUS.
+    /**
+     * Distribución porcentual de probabilidad de obtener una rareza específica
+     * dentro del slot BONUS.
+     *
+     * @var array<string, int>
+     */
     private const BONUS_SLOT_WEIGHTS = [
         'NORMAL' => 80,
         'HOLO' => 15,
@@ -91,7 +122,14 @@ class CardSetOpenAction extends AbstractController
         'SECRET' => 1,
     ];
 
-    // Probabilidad de obtener un sobre GODPACK (1 de cada 4096).
+    /**
+     * Probabilidad de obtener un sobre especial conocido como "GODPACK".
+     *
+     * Un GODPACK contiene exclusivamente cartas de rarezas altas (HOLO, ULTRA y SECRET).
+     * La probabilidad se expresa como "1 entre N", donde N es el valor de esta constante.
+     *
+     * @var int
+     */
     private const GODPACK_PROBABILITY = 4096;
 
     public function __construct(EntityManagerInterface $em)
@@ -99,6 +137,15 @@ class CardSetOpenAction extends AbstractController
         $this->em = $em;
     }
 
+    /**
+     * Acción principal que simula la apertura de un sobre.
+     *
+     * Si se genera un GODPACK (1 entre 4096), el sobre contendrá exclusivamente cartas de rarezas altas.
+     * En caso contrario, se obtienen cartas de cada tipo de slot (COMMON, UNCOMMON, ENERGY, SPECIAL, BONUS).
+     *
+     * @param CardSet $cardSet  El conjunto de cartas del cual se generarán las cartas del sobre.
+     * @return JsonResponse     Respuesta JSON con las cartas generadas.
+     */
     public function __invoke(CardSet $cardSet): JsonResponse
     {
         $cards = [];
@@ -118,9 +165,15 @@ class CardSetOpenAction extends AbstractController
         return $this->json($cards, 200, [], ['groups' => 'card:read']);
     }
 
-    // Obtiene aleatoriamente cartas del slot COMMON.
-    // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes sin indicar rareza ni categoría.
-    // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['COMMON'].
+    /**
+     * Obtiene aleatoriamente cartas del slot COMMON.
+     *
+     * Si no se encuentran suficientes cartas, se completan con cartas sin rareza ni categoría específica.
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int|null $size    Cantidad de cartas a obtener. Si no se indica, usa SLOT_SIZES['COMMON'].
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCardsCommon(CardSet $cardSet, ?int $size = null)
     {
         $slot = 'COMMON';
@@ -129,9 +182,15 @@ class CardSetOpenAction extends AbstractController
         return $this->fillMissingCards($cards, $cardSet, $size, fn ($missing) => $this->getRandomCards($cardSet, $missing));
     }
 
-    // Obtiene aleatoriamente cartas del slot UNCOMMON.
-    // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes de getRandomCardsCommon().
-    // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['UNCOMMON'].
+    /**
+     * Obtiene aleatoriamente cartas del slot UNCOMMON.
+     *
+     * Si faltan cartas, se completan con cartas del slot COMMON.
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int|null $size    Cantidad de cartas a obtener. Si no se indica, usa SLOT_SIZES['UNCOMMON'].
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCardsUncommon(CardSet $cardSet, ?int $size = null)
     {
         $slot = 'UNCOMMON';
@@ -140,9 +199,15 @@ class CardSetOpenAction extends AbstractController
         return $this->fillMissingCards($cards, $cardSet, $size, fn ($missing) => $this->getRandomCardsCommon($cardSet, $missing));
     }
 
-    // Obtiene aleatoriamente cartas de categoría Energy.
-    // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes de getRandomCardsCommon().
-    // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['ENERGY'].
+    /**
+     * Obtiene aleatoriamente cartas de la categoría ENERGY.
+     *
+     * Si faltan cartas, se completan con cartas del slot COMMON.
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int|null $size    Cantidad de cartas a obtener. Si no se indica, usa SLOT_SIZES['ENERGY'].
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCardsEnergy(CardSet $cardSet, ?int $size = null)
     {
         $slot = 'ENERGY';
@@ -151,9 +216,15 @@ class CardSetOpenAction extends AbstractController
         return $this->fillMissingCards($cards, $cardSet, $size, fn ($missing) => $this->getRandomCardsCommon($cardSet, $missing));
     }
 
-    // Obtiene aleatoriamente cartas de una rareza aleatoria según SPECIAL_SLOT_WEIGHTS.
-    // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes del resto de rarezas SPECIAL y si no del slot NORMAL (COMMON y UNCOMMON).
-    // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['SPECIAL'].
+    /**
+     * Obtiene aleatoriamente cartas de una rareza aleatoria según SPECIAL_SLOT_WEIGHTS.
+     *
+     * Si no se encuentran suficientes cartas, se añaden del resto de rarezas SPECIAL y, si aún faltan, del slot NORMAL (COMMON y UNCOMMON).
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int|null $size    Cantidad de cartas a obtener. Si no se indica, usa SLOT_SIZES['SPECIAL'].
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCardsSpecial(CardSet $cardSet, ?int $size = null)
     {
         $slot = 'SPECIAL';
@@ -180,9 +251,15 @@ class CardSetOpenAction extends AbstractController
         return $this->fillMissingCards($cards, $cardSet, $size, $fallback);
     }
 
-    // Obtiene aleatoriamente cartas de una rareza aleatoria según BONUS_SLOT_WEIGHTS.
-    // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes del resto de rarezas BONUS y si no del slot NORMAL (COMMON y UNCOMMON).
-    // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en $SLOT_SIZES['BONUS'].
+    /**
+     * Obtiene aleatoriamente cartas de una rareza aleatoria según BONUS_SLOT_WEIGHTS.
+     *
+     * Si no se encuentran suficientes cartas, se añaden del resto de rarezas BONUS y, si aún faltan, del slot NORMAL (COMMON y UNCOMMON).
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int|null $size    Cantidad de cartas a obtener. Si no se indica, usa SLOT_SIZES['BONUS'].
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCardsBonus(CardSet $cardSet, ?int $size = null)
     {
         $slot = 'BONUS';
@@ -209,9 +286,15 @@ class CardSetOpenAction extends AbstractController
         return $this->fillMissingCards($cards, $cardSet, $size, $fallback);
     }
 
-    // Obtiene aleatoriamente cartas de las rarezas GODPACK (HOLO, ULTRA y SECRET).
-    // Si no encuentra la cantidad de cartas necesarias, se añaden las cartas restantes del resto de rarezas GODPACK y si no del slot RARE o NORMAL (COMMON y UNCOMMON).
-    // Se obtiene la cantidad de cartas indicadas si se pasa el parámetro $size, sino se obtienen las indicadas en el total de $SLOT_SIZES.
+    /**
+     * Obtiene aleatoriamente cartas de las rarezas altas (HOLO, ULTRA y SECRET), propias de un GODPACK.
+     *
+     * Si no se encuentran suficientes cartas, se añaden cartas de rarezas RARE o, si aún faltan, del slot NORMAL.
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int|null $size    Cantidad de cartas a obtener. Si no se indica, usa el total de SLOT_SIZES.
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCardsGodpack(CardSet $cardSet, ?int $size = null)
     {
         $size = $size ?? array_sum(self::SLOT_SIZES);
@@ -229,11 +312,14 @@ class CardSetOpenAction extends AbstractController
         return $this->fillMissingCards($cards, $cardSet, $size, $fallback);
     }
 
-    // Obtiene aleatoriamente cartas de la rareza indicada.
-    // Si la rareza es ENERGY, se obtienen todas las cartas con la categoría ENERGY.
-    // Si la rareza es NORMAL, se obtienen todas las cartas de la rareza COMMON y UNCOMMON.
-    // Si la rareza es GODPACK, se obtienen todas las cartas de la rareza HOLO, ULTRA y SECRET.
-    // Si no se indica rareza, se obtienen todas las cartas sin filtro.
+    /**
+     * Obtiene aleatoriamente cartas según la rareza indicada.
+     *
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int $size         Cantidad de cartas a obtener.
+     * @param string|null $rarity Rareza objetivo (opcional).
+     * @return Card[]           Array de cartas obtenidas.
+     */
     private function getRandomCards(CardSet $cardSet, int $size, ?string $rarity = null)
     {
         $cards = $this->em->getRepository(Card::class)->createQueryBuilder('c')
@@ -263,7 +349,17 @@ class CardSetOpenAction extends AbstractController
         return array_slice($cards, 0, $size);
     }
 
-    // Si la cantidad de cartas obtenidas es menor que la indicada, se obtienen cartas aleatorias de la rareza indicada.
+    /**
+     * Completa un conjunto de cartas si la cantidad obtenida es menor que la esperada.
+     *
+     * Usa un callback ($fallback) para recuperar las cartas faltantes.
+     *
+     * @param Card[] $cards     Cartas inicialmente obtenidas.
+     * @param CardSet $cardSet  Conjunto de cartas base.
+     * @param int $size         Cantidad esperada de cartas.
+     * @param callable $fallback Función que obtiene las cartas faltantes.
+     * @return Card[]           Array final de cartas completas.
+     */
     private function fillMissingCards(array $cards, CardSet $cardSet, int $size, callable $fallback): array
     {
         $missing = $size - count($cards);
@@ -274,7 +370,12 @@ class CardSetOpenAction extends AbstractController
         return $cards;
     }
 
-    // Obtiene una rareza aleatoria según los pesos indicados.
+    /**
+     * Obtiene una rareza aleatoria según los pesos definidos en el array recibido.
+     *
+     * @param array $rarityWeights Array asociativo de rarezas => peso.
+     * @return string              Rareza seleccionada aleatoriamente.
+     */
     private function getRandomRarity(array $rarityWeights)
     {
         $pick = random_int(1, array_sum($rarityWeights));
