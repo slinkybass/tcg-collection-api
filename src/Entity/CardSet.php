@@ -32,9 +32,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
             name: 'cardSet_open',
             uriTemplate: '/sets/{id}/open',
             controller: CardSetOpenAction::class,
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Opens a CardSet and returns a list of obtained Cards.'),
-            read: true,
-            write: false,
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(summary: 'Opens a CardSet and returns a list of obtained Cards.')
         ),
     ]
 )]
